@@ -1,0 +1,190 @@
+==================================================================
+Q1  Customer order history (customer 2955, newest first)
+==================================================================
+                                                  QUERY PLAN                                                   
+---------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1986.43..1986.48 rows=20 width=21) (actual time=4.966..4.967 rows=29.00 loops=1)
+   Sort Key: order_date DESC
+   Sort Method: quicksort  Memory: 26kB
+   Buffers: shared hit=736
+   ->  Seq Scan on orders  (cost=0.00..1986.00 rows=20 width=21) (actual time=0.045..4.939 rows=29.00 loops=1)
+         Filter: (customer_id = 2955)
+         Rows Removed by Filter: 99971
+         Buffers: shared hit=736
+ Planning Time: 0.200 ms
+ Execution Time: 5.008 ms
+(10 rows)
+
+==================================================================
+Q2  Track a delivery by tracking number
+==================================================================
+                                                                              QUERY PLAN                                                                               
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=5742.08..5742.31 rows=2 width=67) (actual time=60.510..65.662 rows=3.00 loops=1)
+   Workers Planned: 2
+   Workers Launched: 2
+   Buffers: shared hit=3376
+   ->  Sort  (cost=4742.05..4742.06 rows=1 width=67) (actual time=24.671..24.674 rows=1.00 loops=3)
+         Sort Key: de.event_time
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=3376
+         Worker 0:  Sort Method: quicksort  Memory: 25kB
+         Worker 1:  Sort Method: quicksort  Memory: 25kB
+         ->  Hash Join  (cost=8.45..4742.04 rows=1 width=67) (actual time=4.615..24.630 rows=1.00 loops=3)
+               Hash Cond: (de.shipment_id = s.shipment_id)
+               Buffers: shared hit=3360
+               ->  Parallel Seq Scan on delivery_events de  (cost=0.00..4445.07 rows=109908 width=58) (actual time=0.006..12.299 rows=87926.00 loops=3)
+                     Buffers: shared hit=3346
+               ->  Hash  (cost=8.44..8.44 rows=1 width=17) (actual time=0.050..0.051 rows=1.00 loops=3)
+                     Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                     Buffers: shared hit=14
+                     ->  Index Scan using shipments_tracking_number_key on shipments s  (cost=0.42..8.44 rows=1 width=17) (actual time=0.046..0.046 rows=1.00 loops=3)
+                           Index Cond: ((tracking_number)::text = 'SNG000000001'::text)
+                           Index Searches: 3
+                           Buffers: shared hit=14
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.229 ms
+ Execution Time: 65.702 ms
+(26 rows)
+
+==================================================================
+Q3  Sales history of one product variant (variant 1234)
+==================================================================
+                                                                 QUERY PLAN                                                                  
+---------------------------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=4664.02..4669.60 rows=49 width=22) (actual time=24.787..28.012 rows=52.00 loops=1)
+   Workers Planned: 1
+   Workers Launched: 1
+   Buffers: shared hit=1759
+   ->  Sort  (cost=3664.01..3664.08 rows=29 width=22) (actual time=12.493..12.497 rows=26.00 loops=2)
+         Sort Key: o.order_date DESC
+         Sort Method: quicksort  Memory: 27kB
+         Buffers: shared hit=1759
+         Worker 0:  Sort Method: quicksort  Memory: 25kB
+         ->  Nested Loop  (cost=0.29..3663.30 rows=29 width=22) (actual time=0.635..12.426 rows=26.00 loops=2)
+               Buffers: shared hit=1751
+               ->  Parallel Seq Scan on order_items oi  (cost=0.00..3433.91 rows=29 width=14) (actual time=0.609..12.225 rows=26.00 loops=2)
+                     Filter: (variant_id = 1234)
+                     Rows Removed by Filter: 125088
+                     Buffers: shared hit=1594
+               ->  Index Scan using orders_pkey on orders o  (cost=0.29..7.91 rows=1 width=12) (actual time=0.006..0.006 rows=1.00 loops=52)
+                     Index Cond: (order_id = oi.order_id)
+                     Index Searches: 52
+                     Buffers: shared hit=157
+ Planning:
+   Buffers: shared hit=16
+ Planning Time: 0.172 ms
+ Execution Time: 28.049 ms
+(23 rows)
+
+==================================================================
+Q4  Fulfilment queue: orders not yet shipped, oldest first
+==================================================================
+                                                     QUERY PLAN                                                     
+--------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=2187.92..2191.57 rows=1463 width=25) (actual time=21.504..21.671 rows=1423.00 loops=1)
+   Sort Key: order_date
+   Sort Method: quicksort  Memory: 108kB
+   Buffers: shared hit=736
+   ->  Seq Scan on orders  (cost=0.00..2111.00 rows=1463 width=25) (actual time=0.015..20.816 rows=1423.00 loops=1)
+         Filter: ((order_status)::text = ANY ('{pending,paid,processing}'::text[]))
+         Rows Removed by Filter: 98577
+         Buffers: shared hit=736
+ Planning Time: 0.062 ms
+ Execution Time: 21.800 ms
+(10 rows)
+
+==================================================================
+Q5  Case-insensitive customer lookup by email
+==================================================================
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Seq Scan on customers  (cost=0.00..136.00 rows=25 width=28) (actual time=4.324..4.764 rows=1.00 loops=1)
+   Filter: (lower((email)::text) = 'peter.uzor4538@example.com'::text)
+   Rows Removed by Filter: 4999
+   Buffers: shared hit=61
+ Planning Time: 0.119 ms
+ Execution Time: 4.794 ms
+(6 rows)
+
+==================================================================
+Q6  Monthly revenue since 1 Aug 2026 (excluding cancelled orders)
+==================================================================
+                                                                       QUERY PLAN                                                                       
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=9370.35..9994.16 rows=11335 width=44) (actual time=148.880..158.359 rows=3.00 loops=1)
+   Group Key: ((date_trunc('month'::text, o.order_date))::date)
+   Buffers: shared hit=2330
+   ->  Sort  (cost=9370.35..9441.26 rows=28363 width=18) (actual time=141.160..143.576 rows=27607.00 loops=1)
+         Sort Key: ((date_trunc('month'::text, o.order_date))::date), o.order_id
+         Sort Method: quicksort  Memory: 1847kB
+         Buffers: shared hit=2330
+         ->  Hash Join  (cost=2377.69..7272.66 rows=28363 width=18) (actual time=21.784..117.059 rows=27607.00 loops=1)
+               Hash Cond: (oi.order_id = o.order_id)
+               Buffers: shared hit=2330
+               ->  Seq Scan on order_items oi  (cost=0.00..4096.28 rows=250228 width=14) (actual time=0.014..27.648 rows=250228.00 loops=1)
+                     Buffers: shared hit=1594
+               ->  Hash  (cost=2236.00..2236.00 rows=11335 width=12) (actual time=21.656..21.657 rows=11092.00 loops=1)
+                     Buckets: 16384  Batches: 1  Memory Usage: 605kB
+                     Buffers: shared hit=736
+                     ->  Seq Scan on orders o  (cost=0.00..2236.00 rows=11335 width=12) (actual time=0.010..17.956 rows=11092.00 loops=1)
+                           Filter: ((order_date >= '2026-08-01 00:00:00+01'::timestamp with time zone) AND ((order_status)::text <> 'cancelled'::text))
+                           Rows Removed by Filter: 88908
+                           Buffers: shared hit=736
+ Planning:
+   Buffers: shared hit=16
+ Planning Time: 0.383 ms
+ Execution Time: 159.183 ms
+(23 rows)
+
+==================================================================
+Q7  Product search by attribute: 256GB storage AND 16GB RAM
+==================================================================
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Hash Join  (cost=134.94..201.69 rows=75 width=95) (actual time=1.492..1.830 rows=75.00 loops=1)
+   Hash Cond: (p.product_id = v.product_id)
+   Buffers: shared hit=103
+   ->  Seq Scan on products p  (cost=0.00..51.00 rows=2000 width=23) (actual time=0.010..0.142 rows=2000.00 loops=1)
+         Buffers: shared hit=31
+   ->  Hash  (cost=134.00..134.00 rows=75 width=80) (actual time=1.466..1.466 rows=75.00 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 18kB
+         Buffers: shared hit=72
+         ->  Seq Scan on product_variants v  (cost=0.00..134.00 rows=75 width=80) (actual time=0.013..1.436 rows=75.00 loops=1)
+               Filter: (attributes @> '{"ram_gb": 16, "storage_gb": 256}'::jsonb)
+               Rows Removed by Filter: 4885
+               Buffers: shared hit=72
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.286 ms
+ Execution Time: 1.860 ms
+(16 rows)
+
+==================================================================
+Q8  Low-stock alert (stock at or below reorder level)
+==================================================================
+                                                             QUERY PLAN                                                             
+------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=337.65..341.79 rows=1653 width=22) (actual time=1.752..1.818 rows=244.00 loops=1)
+   Sort Key: i.quantity_on_hand
+   Sort Method: quicksort  Memory: 34kB
+   Buffers: shared hit=104
+   ->  Hash Join  (cost=114.66..249.29 rows=1653 width=22) (actual time=0.438..1.718 rows=244.00 loops=1)
+         Hash Cond: (v.variant_id = i.variant_id)
+         Buffers: shared hit=104
+         ->  Seq Scan on product_variants v  (cost=0.00..121.60 rows=4960 width=14) (actual time=0.008..0.458 rows=4960.00 loops=1)
+               Buffers: shared hit=72
+         ->  Hash  (cost=94.00..94.00 rows=1653 width=12) (actual time=0.413..0.415 rows=244.00 loops=1)
+               Buckets: 2048  Batches: 1  Memory Usage: 27kB
+               Buffers: shared hit=32
+               ->  Seq Scan on inventory i  (cost=0.00..94.00 rows=1653 width=12) (actual time=0.009..0.362 rows=244.00 loops=1)
+                     Filter: (quantity_on_hand <= reorder_level)
+                     Rows Removed by Filter: 4716
+                     Buffers: shared hit=32
+ Planning:
+   Buffers: shared hit=12
+ Planning Time: 0.201 ms
+ Execution Time: 1.867 ms
+(20 rows)
+
