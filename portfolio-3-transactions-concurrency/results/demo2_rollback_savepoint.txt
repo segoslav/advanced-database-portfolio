@@ -1,0 +1,85 @@
+==================================================================
+2A  Card declined: explicit ROLLBACK
+==================================================================
+ stock_before 
+--------------
+           38
+(1 row)
+
+BEGIN
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+Inside the transaction, the stock HAS been reduced:
+ stock_inside_transaction 
+--------------------------
+                       37
+(1 row)
+
+Payment gateway says: CARD DECLINED -> ROLLBACK everything
+ROLLBACK
+After ROLLBACK: the order does not exist and stock is back to where it was
+ orders_found 
+--------------
+            0
+(1 row)
+
+ stock_after_rollback 
+----------------------
+                   38
+(1 row)
+
+==================================================================
+2B  Ordering more than is in stock: the CHECK constraint aborts it
+==================================================================
+ stock_before 
+--------------
+           77
+(1 row)
+
+BEGIN
+INSERT 0 1
+INSERT 0 1
+Reducing stock by 1000 (more than exists). EXPECT an ERROR:
+The transaction is now aborted. Any further command is refused. EXPECT an ERROR:
+ROLLBACK
+After ROLLBACK: the half-created order was discarded, stock unchanged
+ orders_found 
+--------------
+            0
+(1 row)
+
+ stock_after 
+-------------
+          77
+(1 row)
+
+==================================================================
+2C  SAVEPOINT: retry a failed payment without losing the order
+==================================================================
+BEGIN
+INSERT 0 1
+INSERT 0 1
+UPDATE 1
+SAVEPOINT
+Attempt 1: card gateway returns an amount of 0 (invalid). EXPECT an ERROR:
+Undo ONLY the failed payment step:
+ROLLBACK
+Attempt 2: bank transfer for the correct amount
+INSERT 0 1
+UPDATE 1
+COMMIT
+Result: the order survived, with only the successful payment recorded
+ order_id | order_status | payment_method |  amount   |     reference     
+----------+--------------+----------------+-----------+-------------------
+   100006 | paid         | bank_transfer  | 258900.00 | PAY-DEMO-100006-2
+(1 row)
+
+==================================================================
+Side note: order numbers used by rolled-back transactions are skipped
+==================================================================
+ rolled_back_2a | rolled_back_2b | committed_2c 
+----------------+----------------+--------------
+         100004 |         100005 |       100006
+(1 row)
+

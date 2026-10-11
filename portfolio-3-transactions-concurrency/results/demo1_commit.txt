@@ -1,0 +1,29 @@
+--- BEFORE: stock of SKU-1-1 ---
+   sku   | quantity_on_hand 
+---------+------------------
+ SKU-1-1 |               61
+(1 row)
+
+BEGIN
+--- Step 1: create the order (status pending) ---
+INSERT 0 1
+--- Step 2: add 2 units of SKU-1-1 at the current price ---
+INSERT 0 1
+--- Step 3: reduce stock by 2 ---
+UPDATE 1
+--- Step 4: record a successful card payment for the order total ---
+INSERT 0 1
+--- Step 5: mark the order as paid ---
+UPDATE 1
+COMMIT
+--- AFTER COMMIT: the order, its payment, and the new stock level ---
+ order_id | order_status |   amount   | payment_status |    reference    
+----------+--------------+------------+----------------+-----------------
+   100003 | paid         | 1868200.00 | successful     | PAY-DEMO-100003
+(1 row)
+
+   sku   | quantity_on_hand 
+---------+------------------
+ SKU-1-1 |               59
+(1 row)
+
