@@ -7,3 +7,5 @@
 | 12 Oct 2026 | Claude | Drafted schema, seed data, constraint tests, ERD source and normalisation notes for Portfolio 1 | I ran all scripts in my own PostgreSQL; checked row counts and 11 PASS results; reviewed and edited normalisation explanation |
 
 | 13 Oct 2026 | Claude | Drafted Portfolio 2 queries, index scripts, materialised view and analysis | I ran the before/after measurements on my own database; recorded my own timings; reviewed analysis against the plans |
+
+| 14 Oct 2026 | Claude | Drafted Portfolio 3 transaction scripts, concurrency walkthrough and analysis | Ran all demos myself in two SQL Shell sessions; captured my own output and screenshots; checked results matched the expected outcomes |

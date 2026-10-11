@@ -47,7 +47,7 @@ until delivery.
 |---|---|---|
 | `portfolio-1-database-design/` | Database Design and Modelling | Completed |
 | `portfolio-2-query-optimisation/` | Query Processing and Optimisation | Completed |
-| `portfolio-3-transactions-concurrency/` | Transactions and Concurrency | Planned |
+| `portfolio-3-transactions-concurrency/` | Transactions and Concurrency | Completed |
 | `portfolio-4-nosql/` | NoSQL and Advanced Data Models | Planned |
 | `portfolio-5-distributed-cloud/` | Distributed and Cloud Databases | Planned |
 | `evidence/` | Setup screenshots and general evidence | — |
