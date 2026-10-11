@@ -1,0 +1,53 @@
+DROP MATERIALIZED VIEW
+SELECT 2785
+CREATE INDEX
+ANALYZE
+ raw_order_item_rows | summary_rows 
+---------------------+--------------
+              250228 |         2785
+(1 row)
+
+==================================================================
+Q6b  Monthly revenue since 1 Aug 2026 - from the materialised view
+==================================================================
+                                                                  QUERY PLAN                                                                  
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=68.38..69.07 rows=274 width=36) (actual time=1.046..1.047 rows=3.00 loops=1)
+   Sort Key: ((date_trunc('month'::text, (sale_date)::timestamp with time zone))::date)
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=4 read=3
+   ->  HashAggregate  (cost=51.81..57.29 rows=274 width=36) (actual time=0.530..1.039 rows=3.00 loops=1)
+         Group Key: (date_trunc('month'::text, (sale_date)::timestamp with time zone))::date
+         Batches: 1  Memory Usage: 48kB
+         Buffers: shared hit=4 read=3
+         ->  Bitmap Heap Scan on mv_daily_sales  (cost=11.01..50.05 rows=352 width=11) (actual time=0.200..0.414 rows=350.00 loops=1)
+               Recheck Cond: (sale_date >= '2026-08-01'::date)
+               Heap Blocks: exact=4
+               Buffers: shared hit=4 read=3
+               ->  Bitmap Index Scan on uq_mv_daily_sales  (cost=0.00..10.92 rows=352 width=0) (actual time=0.136..0.136 rows=350.00 loops=1)
+                     Index Cond: (sale_date >= '2026-08-01'::date)
+                     Index Searches: 1
+                     Buffers: shared read=3
+ Planning:
+   Buffers: shared hit=8
+ Planning Time: 0.638 ms
+ Execution Time: 1.898 ms
+(20 rows)
+
+   month    |  revenue_ngn  
+------------+---------------
+ 2026-08-01 | 3658936500.00
+ 2026-09-01 | 3591337400.00
+ 2026-10-01 | 1021395100.00
+(3 rows)
+
+    category     | units |  revenue_ngn   
+-----------------+-------+----------------
+ Electronics     | 45878 | 23920775200.00
+ Home & Kitchen  | 44187 |  6248004300.00
+ Fashion         | 66635 |  2327545800.00
+ Groceries       | 46014 |   981843700.00
+ Health & Beauty | 23787 |   337418200.00
+(5 rows)
+
+REFRESH MATERIALIZED VIEW
