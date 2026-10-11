@@ -45,7 +45,7 @@ until delivery.
 ## Repository Structure
 | Folder | Portfolio | Status |
 |---|---|---|
-| `portfolio-1-database-design/` | Database Design and Modelling | Planned |
+| `portfolio-1-database-design/` | Database Design and Modelling | Completed |
 | `portfolio-2-query-optimisation/` | Query Processing and Optimisation | Planned |
 | `portfolio-3-transactions-concurrency/` | Transactions and Concurrency | Planned |
 | `portfolio-4-nosql/` | NoSQL and Advanced Data Models | Planned |

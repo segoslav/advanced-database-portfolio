@@ -1,0 +1,110 @@
+// ShopNaija Online Marketplace — ER Diagram source
+// Paste this whole file into https://dbdiagram.io to draw the diagram,
+// then use Export > PNG to save erd.png into this folder.
+
+Project ShopNaija {
+  database_type: 'PostgreSQL'
+  Note: 'MIT 8103 Portfolio 1 — E-commerce case study (simulated organisation)'
+}
+
+Table customers {
+  customer_id serial [pk]
+  first_name varchar(50) [not null]
+  last_name varchar(50) [not null]
+  email varchar(120) [not null, unique]
+  phone varchar(20) [not null, unique]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table addresses {
+  address_id serial [pk]
+  customer_id int [not null, ref: > customers.customer_id]
+  label varchar(30) [not null]
+  street varchar(150) [not null]
+  city varchar(60) [not null]
+  state varchar(40) [not null]
+  is_default boolean [not null, note: 'max one TRUE per customer']
+}
+
+Table categories {
+  category_id serial [pk]
+  name varchar(60) [not null, unique]
+  parent_category_id int [ref: > categories.category_id, note: 'self-reference: sub-categories']
+}
+
+Table products {
+  product_id serial [pk]
+  category_id int [not null, ref: > categories.category_id]
+  name varchar(120) [not null]
+  brand varchar(60)
+  description text
+  is_active boolean [not null]
+  created_at timestamptz [not null]
+}
+
+Table product_variants {
+  variant_id serial [pk]
+  product_id int [not null, ref: > products.product_id]
+  sku varchar(40) [not null, unique]
+  attributes jsonb [not null, note: 'size, colour, storage... differs by category']
+  price numeric(12,2) [not null, note: 'CHECK > 0']
+}
+
+Table inventory {
+  variant_id int [pk, ref: - product_variants.variant_id]
+  quantity_on_hand int [not null, note: 'CHECK >= 0']
+  reorder_level int [not null]
+  updated_at timestamptz [not null]
+}
+
+Table orders {
+  order_id serial [pk]
+  customer_id int [not null, ref: > customers.customer_id]
+  shipping_address_id int [not null, ref: > addresses.address_id]
+  order_status varchar(20) [not null, note: 'pending | paid | processing | shipped | delivered | cancelled']
+  order_date timestamptz [not null]
+}
+
+Table order_items {
+  order_id int [pk, ref: > orders.order_id]
+  variant_id int [pk, ref: > product_variants.variant_id]
+  quantity int [not null, note: 'CHECK > 0']
+  unit_price numeric(12,2) [not null, note: 'price at time of purchase']
+}
+
+Table payments {
+  payment_id serial [pk]
+  order_id int [not null, ref: > orders.order_id]
+  amount numeric(12,2) [not null]
+  payment_method varchar(20) [not null, note: 'card | bank_transfer | pay_on_delivery | wallet']
+  payment_status varchar(20) [not null, note: 'pending | successful | failed | refunded']
+  reference varchar(40) [not null, unique]
+  paid_at timestamptz [not null]
+}
+
+Table delivery_agents {
+  agent_id serial [pk]
+  full_name varchar(100) [not null]
+  phone varchar(20) [not null, unique]
+  base_city varchar(60) [not null]
+  is_active boolean [not null]
+}
+
+Table shipments {
+  shipment_id serial [pk]
+  order_id int [not null, unique, ref: - orders.order_id]
+  agent_id int [ref: > delivery_agents.agent_id]
+  tracking_number varchar(30) [not null, unique]
+  shipment_status varchar(20) [not null]
+  dispatched_at timestamptz
+  delivered_at timestamptz [note: 'CHECK >= dispatched_at']
+}
+
+Table delivery_events {
+  event_id bigserial [pk]
+  shipment_id int [not null, ref: > shipments.shipment_id]
+  event_status varchar(20) [not null]
+  location varchar(80) [not null]
+  event_time timestamptz [not null]
+  note varchar(200)
+}
