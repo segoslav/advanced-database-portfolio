@@ -1,0 +1,33 @@
+﻿
+==================================================================
+Q1  Customer 2955 order history, newest first
+==================================================================
+BEFORE  plan: SORT <- COLLSCAN
+        returned 29 | documents examined 100002 | index keys examined 0 | time 882 ms
+AFTER   plan: FETCH <- IXSCAN(idx_customer_date)
+        returned 29 | documents examined 29 | index keys examined 29 | time 220 ms
+
+==================================================================
+Q2  Track a parcel by tracking number (field inside an embedded document)
+==================================================================
+BEFORE  plan: COLLSCAN
+        returned 1 | documents examined 100002 | index keys examined 0 | time 195 ms
+AFTER   plan: EXPRESS_IXSCAN(idx_tracking)
+        returned 1 | documents examined 1 | index keys examined 1 | time 14 ms
+
+==================================================================
+Q3  Products with a 256GB / 16GB RAM variant (index on fields INSIDE an array)
+==================================================================
+BEFORE  plan: COLLSCAN
+        returned 69 | documents examined 2001 | index keys examined 0 | time 12 ms
+AFTER   plan: FETCH <- IXSCAN(idx_variant_storage_ram)
+        returned 69 | documents examined 69 | index keys examined 69 | time 15 ms
+
+==================================================================
+Indexes now in place
+==================================================================
+orders    _id_                       {"_id":1}
+orders    idx_customer_date          {"customer_id":1,"order_date":-1}
+orders    idx_tracking               {"shipment.tracking_number":1}  unique  partial
+products  _id_                       {"_id":1}
+products  idx_variant_storage_ram    {"variants.attributes.storage_gb":1,"variants.attributes.ram_gb":1}

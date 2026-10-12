@@ -1,0 +1,65 @@
+﻿
+==================================================================
+A  Revenue by category, 2026 (excluding cancelled orders)
+==================================================================
+Electronics      units  45880   revenue NGN   23,922,643,400
+Home & Kitchen   units  44188   revenue NGN    6,248,263,200
+Fashion          units  66635   revenue NGN    2,327,545,800
+Groceries        units  46014   revenue NGN      981,843,700
+Health & Beauty  units  23787   revenue NGN      337,418,200
+
+Cross-check: run this in pgAdmin. The figures must match exactly.
+  SELECT parent.name, SUM(oi.quantity) AS units, SUM(oi.quantity * oi.unit_price) AS revenue
+  FROM orders o JOIN order_items oi USING (order_id)
+  JOIN product_variants v USING (variant_id) JOIN products p USING (product_id)
+  JOIN categories child ON child.category_id = p.category_id
+  JOIN categories parent ON parent.category_id = child.parent_category_id
+  WHERE o.order_status <> 'cancelled' AND o.order_date >= '2026-01-01 00:00:00+01'
+  GROUP BY parent.name ORDER BY revenue DESC;
+
+==================================================================
+B  Monthly revenue since August 2026 (compare Portfolio 2, Q6)
+==================================================================
+2026-08   orders   4946   revenue NGN    3,658,936,500
+2026-09   orders   4751   revenue NGN    3,591,337,400
+2026-10   orders   1397   revenue NGN    1,023,522,200
+
+==================================================================
+C  Top 5 customers by spend ($lookup = a join, used only when needed)
+==================================================================
+#4543  Babatunde Obi           32 orders   NGN     36,019,200   babatunde.obi4543@example.com
+#3115  Segun Ekwueme           31 orders   NGN     33,105,900   segun.ekwueme3115@example.com
+#1328  Mariam Ekwueme          34 orders   NGN     32,838,100   mariam.ekwueme1328@example.com
+#839   Bisi Balogun            26 orders   NGN     32,234,900   bisi.balogun839@example.com
+#2415  Uche Suleiman           26 orders   NGN     32,152,700   uche.suleiman2415@example.com
+
+==================================================================
+D  Average delivery time by destination state (hours from order to doorstep)
+==================================================================
+Edo              4060 deliveries   avg  96.8 hours
+Imo              4314 deliveries   avg  97.1 hours
+Ogun             4217 deliveries   avg  97.4 hours
+FCT              8555 deliveries   avg  97.5 hours
+Kwara            4820 deliveries   avg  97.6 hours
+Kano             4000 deliveries   avg  97.7 hours
+Anambra          4799 deliveries   avg  97.7 hours
+Akwa Ibom        4465 deliveries   avg  97.7 hours
+Cross River      4088 deliveries   avg  97.8 hours
+Adamawa          4608 deliveries   avg  97.9 hours
+Lagos           14168 deliveries   avg  98.1 hours
+Enugu            4415 deliveries   avg  98.2 hours
+Plateau          4345 deliveries   avg  98.2 hours
+Oyo              4214 deliveries   avg  98.3 hours
+Delta            4328 deliveries   avg  98.3 hours
+Kaduna           4334 deliveries   avg  98.3 hours
+Rivers           4045 deliveries   avg  98.9 hours
+
+==================================================================
+E  "Customers who bought a Phone also bought..." (relationship query)
+==================================================================
+Food Staples         bought alongside a phone 5225 times
+Furniture            bought alongside a phone 5156 times
+Skincare             bought alongside a phone 4912 times
+Shoes                bought alongside a phone 4872 times
+Men's Clothing       bought alongside a phone 4863 times
+(The sample data is randomly generated, so the counts are similar. Real shop data would show genuine patterns, e.g. phones with phone cases.)

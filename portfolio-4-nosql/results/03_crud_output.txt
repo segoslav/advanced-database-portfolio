@@ -1,0 +1,250 @@
+﻿
+==================================================================
+CREATE 1  Add a solar generator (new attribute types, no ALTER TABLE)
+==================================================================
+Inserted product _id: 900001
+In SQL this needed either new columns or a JSONB column (Portfolio 1). Here it is just a new document.
+
+==================================================================
+CREATE 2  Schema validation still rejects bad data
+==================================================================
+PASS: invalid order rejected -> Document failed validation
+(status "lost_in_space" is not in the allowed list and quantity 0 is below the minimum of 1)
+
+==================================================================
+READ 1  Same collection, different shapes: a phone vs a bag of rice vs the generator
+==================================================================
+{
+  name: 'Infinix Smartphone 105',
+  category: {
+    name: 'Phones'
+  },
+  variants: [
+    {
+      attributes: {
+        colour: 'Silver',
+        ram_gb: 16,
+        storage_gb: 256
+      }
+    },
+    {
+      attributes: {
+        colour: 'Silver',
+        ram_gb: 4,
+        storage_gb: 128
+      }
+    },
+    {
+      attributes: {
+        colour: 'Gold',
+        ram_gb: 8,
+        storage_gb: 128
+      }
+    },
+    {
+      attributes: {
+        colour: 'Blue',
+        ram_gb: 4,
+        storage_gb: 64
+      }
+    }
+  ]
+}
+{
+  name: 'Dangote Bag 109',
+  category: {
+    name: 'Food Staples'
+  },
+  variants: [
+    {
+      attributes: {
+        weight: '10kg',
+        expiry_months: 18
+      }
+    }
+  ]
+}
+{
+  name: 'Lumos Solar Generator 1500W',
+  category: {
+    name: 'Solar & Power'
+  },
+  variants: [
+    {
+      attributes: {
+        wattage_w: 1500,
+        battery_type: 'LiFePO4',
+        battery_capacity_wh: 1536,
+        solar_input_w: 500,
+        outlets: [
+          'AC',
+          'USB-C',
+          '12V car socket'
+        ]
+      }
+    }
+  ]
+}
+
+==================================================================
+READ 2  Phones with a 256GB / 16GB RAM variant (search inside the embedded array)
+==================================================================
+Matching phones: 39
+{
+  name: 'Infinix Smartphone 105',
+  variants: [
+    {
+      sku: 'SKU-5-1',
+      attributes: {
+        colour: 'Silver',
+        ram_gb: 16,
+        storage_gb: 256
+      },
+      price: 119400,
+      stock: {
+        on_hand: 304,
+        reorder_level: 10
+      }
+    }
+  ]
+}
+{
+  name: 'Tecno Smartphone 187',
+  variants: [
+    {
+      sku: 'SKU-87-2',
+      attributes: {
+        colour: 'Black',
+        ram_gb: 16,
+        storage_gb: 256
+      },
+      price: 95200,
+      stock: {
+        on_hand: 317,
+        reorder_level: 10
+      }
+    }
+  ]
+}
+{
+  name: 'Tecno Smartphone 200',
+  variants: [
+    {
+      sku: 'SKU-100-1',
+      attributes: {
+        colour: 'Blue',
+        ram_gb: 16,
+        storage_gb: 256
+      },
+      price: 319400,
+      stock: {
+        on_hand: 46,
+        reorder_level: 10
+      }
+    }
+  ]
+}
+
+==================================================================
+READ 3  Track a parcel: ONE read, no joins (SQL needed shipments JOIN delivery_events)
+==================================================================
+{
+  _id: 1,
+  status: 'delivered',
+  shipment: {
+    tracking_number: 'SNG000000001',
+    status: 'delivered',
+    events: [
+      {
+        status: 'in_transit',
+        location: 'ShopNaija Hub, Lagos',
+        time: ISODate('2026-09-01T15:15:23.905Z'),
+        note: 'Package dispatched from hub'
+      },
+      {
+        status: 'out_for_delivery',
+        location: 'Onitsha',
+        time: ISODate('2026-09-04T12:15:23.905Z'),
+        note: 'Rider is on the way'
+      },
+      {
+        status: 'delivered',
+        location: 'Onitsha',
+        time: ISODate('2026-09-04T15:15:23.905Z'),
+        note: 'Delivered to customer'
+      }
+    ]
+  }
+}
+
+==================================================================
+READ 4  Customer 2955: five most recent orders
+==================================================================
+{
+  _id: 82558,
+  status: 'delivered',
+  order_date: ISODate('2026-09-23T15:12:27.687Z'),
+  total: 1037400
+}
+{
+  _id: 42766,
+  status: 'delivered',
+  order_date: ISODate('2026-09-12T05:45:31.068Z'),
+  total: 272800
+}
+{
+  _id: 16467,
+  status: 'delivered',
+  order_date: ISODate('2026-09-03T09:50:40.554Z'),
+  total: 783500
+}
+{
+  _id: 1,
+  status: 'delivered',
+  order_date: ISODate('2026-09-01T05:15:23.905Z'),
+  total: 72600
+}
+{
+  _id: 75652,
+  status: 'delivered',
+  order_date: ISODate('2026-08-31T17:12:13.944Z'),
+  total: 608700
+}
+
+==================================================================
+UPDATE 1  Change the price of one variant inside a product (positional $ operator)
+==================================================================
+Infinix Smartphone 105 (SKU-5-1): price 119400 -> 120400
+(price restored afterwards so the script can be re-run)
+
+==================================================================
+UPDATE 2  Rider scans a parcel: add a tracking event and change its status
+==================================================================
+Order 89, parcel SNG000000089: status now "out_for_delivery"
+Last two tracking events:
+[
+  {
+    status: 'in_transit',
+    location: 'ShopNaija Hub, Lagos',
+    time: ISODate('2026-09-27T17:41:59.710Z'),
+    note: 'Package dispatched from hub'
+  },
+  {
+    status: 'out_for_delivery',
+    location: 'Abuja',
+    time: ISODate('2026-10-12T10:55:38.262Z'),
+    note: 'Rider is on the way'
+  }
+]
+
+==================================================================
+UPDATE 3  Flash sale: one phone left, two customers (compare Portfolio 3)
+==================================================================
+Customer 1: modifiedCount = 1 -> GOT THE PHONE
+Customer 2: modifiedCount = 0 -> SOLD OUT
+Stock left: 0
+
+==================================================================
+DELETE  Remove the demo solar generator
+==================================================================
+deletedCount: 1

@@ -1,0 +1,80 @@
+﻿Recreating collections with validation rules...
+Loading products...
+Loading customers...
+Loading orders (the big one)...
+
+================ LOAD SUMMARY ================
+products  : 2001 documents  (SQL: products + categories + product_variants + inventory)
+customers : 5000 documents  (SQL: customers + addresses)
+orders    : 100002 documents  (SQL: orders + order_items + payments + shipments + delivery_agents + delivery_events)
+Loaded in 9.6 seconds
+
+Average document size (bytes):
+  products  : 588
+  customers : 368
+  orders    : 1202
+
+One complete order document: what took 6 tables and 5 joins in SQL
+{
+  _id: 1,
+  customer_id: 2955,
+  customer_name: 'Musa Bello',
+  status: 'delivered',
+  order_date: ISODate('2026-09-01T05:15:23.905Z'),
+  shipping_address: {
+    street: '96 Ogui Rd',
+    city: 'Onitsha',
+    state: 'Anambra'
+  },
+  items: [
+    {
+      sku: 'SKU-1287-1',
+      product_id: 1287,
+      product_name: 'Lisa Folawiyo Dress 1387',
+      category: 'Fashion',
+      subcategory: "Women's Clothing",
+      quantity: 2,
+      unit_price: 36300
+    }
+  ],
+  total: 72600,
+  payments: [
+    {
+      method: 'wallet',
+      status: 'successful',
+      amount: 72600,
+      reference: 'PAY-0000001-A',
+      paid_at: ISODate('2026-09-01T05:20:23.905Z')
+    }
+  ],
+  shipment: {
+    tracking_number: 'SNG000000001',
+    status: 'delivered',
+    agent: {
+      name: 'Temitope Lawal',
+      phone: '09000000027'
+    },
+    dispatched_at: ISODate('2026-09-01T15:15:23.905Z'),
+    delivered_at: ISODate('2026-09-04T15:15:23.905Z'),
+    events: [
+      {
+        status: 'in_transit',
+        location: 'ShopNaija Hub, Lagos',
+        time: ISODate('2026-09-01T15:15:23.905Z'),
+        note: 'Package dispatched from hub'
+      },
+      {
+        status: 'out_for_delivery',
+        location: 'Onitsha',
+        time: ISODate('2026-09-04T12:15:23.905Z'),
+        note: 'Rider is on the way'
+      },
+      {
+        status: 'delivered',
+        location: 'Onitsha',
+        time: ISODate('2026-09-04T15:15:23.905Z'),
+        note: 'Delivered to customer'
+      }
+    ]
+  }
+}

@@ -9,3 +9,5 @@
 | 13 Oct 2026 | Claude | Drafted Portfolio 2 queries, index scripts, materialised view and analysis | I ran the before/after measurements on my own database; recorded my own timings; reviewed analysis against the plans |
 
 | 14 Oct 2026 | Claude | Drafted Portfolio 3 transaction scripts, concurrency walkthrough and analysis | Ran all demos myself in two SQL Shell sessions; captured my own output and screenshots; checked results matched the expected outcomes |
+
+  | 15 Oct 2026 | Claude | Drafted Portfolio 4 export, MongoDB scripts and analysis | Ran all scripts on my own MongoDB; checked validation, flash sale and explain outputs; cross-checked revenue against PostgreSQL |
