@@ -1,0 +1,65 @@
+# =====================================================================
+# ShopNaija — 3-node MongoDB replica set
+# MIT 8103 Advanced Database Systems — Portfolio 5
+#
+# Start:   docker compose up -d
+# Stop:    docker compose down          (keeps the data)
+# Remove:  docker compose down -v       (deletes the data volumes too)
+#
+# Three copies of the same database, each in its own container:
+#   mongo1  host port 27021   (priority 2: preferred primary)
+#   mongo2  host port 27022
+#   mongo3  host port 27023
+# Host ports 27021-27023 avoid clashing with your normal MongoDB on 27017.
+# =====================================================================
+
+name: shopnaija-cluster
+
+x-mongo-node: &mongo-node
+  image: mongo:8.0
+  # --replSet rs0          : join the replica set called "rs0"
+  # --bind_ip_all          : accept connections from the other containers
+  # --wiredTigerCacheSizeGB: keep memory use modest (3 servers on one laptop)
+  command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.5"]
+  restart: "no"
+  networks: [shopnaija-net]
+
+services:
+  mongo1:
+    <<: *mongo-node
+    container_name: mongo1
+    hostname: mongo1
+    ports: ["27021:27017"]
+    volumes:
+      - mongo1-data:/data/db
+      - ./scripts:/scripts:ro
+      - ../portfolio-4-nosql/data:/shopnaija-data:ro
+
+  mongo2:
+    <<: *mongo-node
+    container_name: mongo2
+    hostname: mongo2
+    ports: ["27022:27017"]
+    volumes:
+      - mongo2-data:/data/db
+      - ./scripts:/scripts:ro
+      - ../portfolio-4-nosql/data:/shopnaija-data:ro
+
+  mongo3:
+    <<: *mongo-node
+    container_name: mongo3
+    hostname: mongo3
+    ports: ["27023:27017"]
+    volumes:
+      - mongo3-data:/data/db
+      - ./scripts:/scripts:ro
+      - ../portfolio-4-nosql/data:/shopnaija-data:ro
+
+networks:
+  shopnaija-net:
+    name: shopnaija-net
+
+volumes:
+  mongo1-data:
+  mongo2-data:
+  mongo3-data:
