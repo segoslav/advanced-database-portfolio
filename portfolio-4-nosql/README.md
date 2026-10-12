@@ -111,11 +111,11 @@ reference data that grows without limit or is shared and changes independently.*
 
 | Category | MongoDB revenue (NGN) | PostgreSQL revenue (NGN) | Match |
 |---|---|---|---|
-| Electronics     | 23,929,480,100 | 23,929,480,100 | ✓ |
-| Home & Kitchen  |  6,248,712,300 |  6,248,712,300 | ✓ |
-| Fashion         |  2,327,647,300 |  2,327,647,300 | ✓ |
-| Groceries       |    981,910,500 |    981,910,500 | ✓ |
-| Health & Beauty |    337,461,400 |    337,461,400 | ✓ |
+| Electronics     | 23,922,643,400 | 23,922,643,400 | ✓ |
+| Home & Kitchen  |  6,248,263,200 |  6,248,263,200 | ✓ |
+| Fashion         |  2,327,545,800 |  2,327,545,800 | ✓ |
+| Groceries       |    981,843,700 |    981,843,700 | ✓ |
+| Health & Beauty |    337,418,200 |    337,418,200 | ✓ |
 
 **Indexes** (from `results/05_indexes_output.txt`)
 

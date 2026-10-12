@@ -53,47 +53,53 @@ remaining members **elect** a new one, provided a majority (2 of 3) can still se
 
 **Replication** (`results/02_load_output.txt`, `results/03_replication_output.txt`)
 
-| Member | Role | Orders held | Test write found after |
-|---|---|---|---|
-| mongo1 | | | |
-| mongo2 | | | |
-| mongo3 | | | |
+| Member | Role | Products / customers / orders held | Test write found after | Lag behind primary |
+|---|---|---|---|---|
+| mongo1 | PRIMARY | 2,001 / 5,000 / 100,002 | 0 ms (written here) | 0 s |
+| mongo2 | SECONDARY | 2,001 / 5,000 / 100,002 | ~20 ms | ≤ 1 s |
+| mongo3 | SECONDARY | 2,001 / 5,000 / 100,002 | ~0 ms | ≤ 1 s |
+
+Loading 107,003 documents with `w: "majority"` took 39.7 seconds. All three members ended with
+identical counts. (Lag is reported in whole seconds, so "1 s" means "under a second".)
 
 **Failover**: primary killed with `docker kill mongo1` (`results/04_failover_output.txt`)
 
 | Measure | Value |
 |---|---|
-| Order number when the primary was killed | |
-| Longest single write during the election (ms) | |
-| New primary | |
-| Orders attempted / stored / lost | 45 / / |
-| After `docker start mongo1`: rejoined as | |
+| Primary killed | between order #15 (14:16:42) and order #16 |
+| Longest single write during the election | **12,690 ms** (order #16), against a normal 12–50 ms |
+| New primary | mongo2 |
+| Orders attempted / stored / lost | 45 / 45 / **0** |
+| Status during the outage | mongo1 health 0 (unreachable); mongo2 PRIMARY; mongo3 SECONDARY |
+| After `docker start mongo1` | Rejoined, caught up, and **took back the primary role** (priority 2) |
 
 **Write concern** (`results/05_write_concern_output.txt`): 300 inserts each
 
-| Write concern | Total ms | Avg ms per write | Survives losing |
-|---|---|---|---|
-| `w: 1` | | | nothing (primary only) |
-| `w: "majority"` | | | any 1 server |
-| `w: 3` | | | any 1 server, but **fails** if any server is down |
+| Write concern | Total ms | Avg ms per write | Confirmed when… | Survives losing |
+|---|---|---|---|---|
+| `w: 1` | 1,133 | 3.78 | the primary has it in memory | nothing (primary only) |
+| `w: "majority"` | 4,398 | 14.66 | 2 of 3 servers have it **saved to disk (journaled)** | any 1 server, even a power cut |
+| `w: 3` | 1,439 | 4.80 | all 3 servers have it in memory | any 1 server, but **fails** if any server is down |
 
 **Network partition**: mongo3 cut off (`results/06_partition_output.txt`)
 
-| Check | During partition | After reconnecting |
+| Check | During partition (14:33) | After reconnecting (14:37) |
 |---|---|---|
-| ORDER-A (`w: majority`) on primary side | | — |
-| ORDER-B (`w: 3`) on primary side | | — |
-| ORDER-A visible on mongo3 | | |
-| ORDER-B visible on mongo3 | | |
+| mongo3 as seen by the primary | not reachable, health 0 | SECONDARY, health 1 |
+| Other members as seen by mongo3 | both not reachable | mongo1 PRIMARY, mongo2 SECONDARY |
+| ORDER-A (`w: majority`) | **Saved**, confirmed by mongo1 + mongo2 | — |
+| ORDER-B (`w: 3`) | **Not confirmed** after 5,029 ms (`WriteConcernFailed`), but stored on the primary | — |
+| ORDER-A visible on mongo3 | NOT FOUND (stale) | FOUND |
+| ORDER-B visible on mongo3 | NOT FOUND (stale) | FOUND |
 
 **Transaction** (`results/07_transaction_output.txt`)
 
-| Customer | Outcome | Order visible before commit? | Stock after |
-|---|---|---|---|
-| 1 | | | |
-| 2 | | | |
+| Customer | Stock before | Outcome | Order visible to others before commit? | Stock after |
+|---|---|---|---|---|
+| 1 | 1 | **COMMITTED**: stock reduced and order created together | NO (YES only after commit) | 0 |
+| 2 | 0 | **ABORTED** (out of stock): nothing saved | — | 0 |
 
-> Fill the empty cells from your output files.
+Flash-sale orders stored: 1. Stock left: 0. No overselling, and no half-finished order.
 
 ## Analysis
 
@@ -102,19 +108,24 @@ milliseconds. Secondaries do not receive the data directly from the application:
 the primary's oplog, a running list of every change, and replay it in order. All three
 members therefore hold full, identical copies: the 100,000+ orders exist three times.
 
-**Availability and failover.** Killing the primary simulates a server crash. For roughly
-10–12 seconds no primary existed (members wait 10 s, `electionTimeoutMillis`, before deciding the
-primary is gone, then hold an election), so one write paused. The driver then found the new
+**Availability and failover.** Killing the primary simulates a server crash. For about
+12.7 seconds no primary existed: members wait 10 s (`electionTimeoutMillis`) before deciding the
+primary is gone, then hold an election, which mongo2 won. During that time one order (#16) paused. The driver then found the new
 primary and **retried the write automatically** (`retryWrites`), so no order was lost. When
 mongo1 came back it first rejoined as a secondary and copied the writes it had missed; because
 it has the highest priority it then took the primary role back. Without replication, the crash
 would have taken the shop offline until someone repaired the server.
 
 **Consistency: write and read concern.** Write concern is a dial between speed and safety.
-`w: 1` is fastest, but an order confirmed only by the primary can be lost if the primary dies
-before copying it. `w: "majority"` waits for 2 of 3 servers, and data on a majority survives any
-single failure and can never be rolled back. `w: 3` is safest on paper but makes the shop
-**unavailable for writes whenever any one server is down**, as the partition test showed.
+`w: 1` was fastest (3.8 ms per write), but an order confirmed only by the primary can be lost if
+the primary dies before copying it. The surprise was that `w: "majority"` (14.7 ms) was **slower
+than `w: 3`** (4.8 ms), even though it waits for fewer servers. The reason is *what* it waits for:
+by default MongoDB only confirms a majority write once each of those servers has written it to
+its on-disk **journal**, while `w: 3` (with no `j` option) only waits until all three have it in
+memory. So `w: "majority"` is the stronger durability guarantee: the order survives even a
+simultaneous power cut, and majority-committed data can never be rolled back. `w: 3` looks
+safest on paper but makes the shop **unavailable for writes whenever any one server is down**,
+as the partition test showed (ORDER-B timed out after 5 seconds).
 **ShopNaija should use `w: "majority"` for orders and payments**, and `readConcern: "majority"`
 for anything financial, so reports never show data that could later disappear.
 
@@ -160,9 +171,9 @@ real order data (`results/08_shard_key_output.txt`):
 
 | Shard key | Data spread | Write spread | "Show my orders" query | Verdict |
 |---|---|---|---|---|
-| `shipping_address.state` | Uneven: busiest state has several times an average state's orders | Uneven | All shards | ✗ Few key values, hot shard for Lagos |
-| `order_date` (ranged) | Even over time | **All new orders hit one shard** | All shards | ✗ Monotonic key, hot shard |
-| `customer_id` (hashed) | Even (≈⅓ per shard) | Even | **One shard** | ✓ Recommended |
+| `shipping_address.state` | Uneven: Lagos holds 16.2% of orders, **2.9× an average state**; only 18 key values | Uneven | All shards | ✗ Hot shard for Lagos; can never split into more than 18 pieces |
+| `order_date` (ranged) | Even over time (~5,400–5,500 orders per month) | **All new orders hit one shard** | All shards | ✗ Ever-increasing key, hot shard |
+| `customer_id` (hashed) | **33.2% / 33.6% / 33.1%** across 3 shards | Even | **One shard** | ✓ Recommended |
 
 **Recommendation:** shard `orders` on `{ customer_id: "hashed" }`. Orders spread evenly, new
 orders spread evenly, and the most frequent customer query ("my orders") is answered by a single
