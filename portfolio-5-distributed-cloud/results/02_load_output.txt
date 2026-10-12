@@ -1,0 +1,16 @@
+﻿
+==================================================================
+Loading into the replica set (primary: mongo1:27017)
+==================================================================
+products   2001 documents written to the primary
+customers  5000 documents written to the primary
+orders     100002 documents written to the primary
+Finished in 39.7 seconds
+
+==================================================================
+Did every server receive a copy? (counted on each member directly)
+==================================================================
+member          role        products  customers    orders
+mongo1:27017    PRIMARY         2001       5000    100002
+mongo2:27017    SECONDARY       2001       5000    100002
+mongo3:27017    SECONDARY       2001       5000    100002

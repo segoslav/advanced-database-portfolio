@@ -1,0 +1,35 @@
+﻿
+==================================================================
+1  Write one new order to the PRIMARY (writeConcern w:1 = primary only)
+==================================================================
+14:00:04  wrote ORDER-REPL-1791813604311 to mongo1:27017
+
+==================================================================
+2  Look for it on each member separately
+==================================================================
+mongo1:27017    PRIMARY    FOUND  (after about 0 ms)
+mongo2:27017    SECONDARY  FOUND  (after about 20 ms)
+mongo3:27017    SECONDARY  FOUND  (after about 0 ms)
+
+==================================================================
+3  How it travelled: the oplog entry on the primary
+==================================================================
+{
+  ts: Timestamp({ t: 1791813604, i: 2 }),
+  op: 'i (insert)',
+  ns: 'shopnaija.replication_test',
+  o: {
+    _id: 'ORDER-REPL-1791813604311',
+    customer_id: 2955,
+    status: 'paid',
+    total: 72600,
+    created_at: ISODate('2026-10-12T14:00:04.312Z')
+  }
+}
+
+==================================================================
+4  Replication lag: how far behind the primary each member is
+==================================================================
+mongo1:27017    PRIMARY    behind primary by 0 s
+mongo2:27017    SECONDARY  behind primary by 1 s
+mongo3:27017    SECONDARY  behind primary by 1 s

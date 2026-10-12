@@ -1,0 +1,57 @@
+﻿
+==================================================================
+1  The cluster from the primary's point of view
+==================================================================
+Replica set "rs0", as seen by this member:
+member          state       health  last write applied
+mongo1:27017    PRIMARY     1       2026-10-12 14:33:07   <- this member
+mongo2:27017    SECONDARY   1       2026-10-12 14:33:07
+mongo3:27017    (not reachable/healthy) 0       1970-01-01 00:00:00
+
+==================================================================
+2  Place an order with writeConcern "majority" (needs 2 of 3 servers)
+==================================================================
+14:33:11  ORDER-A saved. mongo1 + mongo2 are a majority, so the shop keeps working.
+
+==================================================================
+3  Place an order with writeConcern 3 (needs ALL servers)
+==================================================================
+14:33:16  ORDER-B NOT confirmed after 5029 ms: WriteConcernFailed waiting for replication timed out
+  mongo3 is unreachable, so "all three" can never confirm.
+  Note: the order IS stored on the primary; only the confirmation timed out.
+
+Orders on the majority side now: 2
+
+==================================================================
+mongo3's view of the cluster at 14:33:26
+==================================================================
+Replica set "rs0", as seen by this member:
+member          state       health  last write applied
+mongo1:27017    (not reachable/healthy) 0       1970-01-01 00:00:00
+mongo2:27017    (not reachable/healthy) 0       1970-01-01 00:00:00
+mongo3:27017    SECONDARY   1       2026-10-12 14:31:07   <- this member
+
+==================================================================
+Orders that mongo3 can see
+==================================================================
+ORDER-A: NOT FOUND  (mongo3 has not received it)
+ORDER-B: NOT FOUND  (mongo3 has not received it)
+
+mongo3 is a SECONDARY: it can still answer reads, but cannot accept writes.
+
+==================================================================
+mongo3's view of the cluster at 14:37:55
+==================================================================
+Replica set "rs0", as seen by this member:
+member          state       health  last write applied
+mongo1:27017    PRIMARY     1       2026-10-12 14:37:47
+mongo2:27017    SECONDARY   1       2026-10-12 14:37:47
+mongo3:27017    SECONDARY   1       2026-10-12 14:37:47   <- this member
+
+==================================================================
+Orders that mongo3 can see
+==================================================================
+ORDER-A: FOUND   (written during the partition, w: majority)
+ORDER-B: FOUND   (written during the partition, w: 3)
+
+mongo3 is a SECONDARY: it can still answer reads, but cannot accept writes.

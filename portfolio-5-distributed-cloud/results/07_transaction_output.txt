@@ -1,0 +1,20 @@
+﻿
+==================================================================
+Two customers try to buy the last flash-sale phone
+==================================================================
+
+Customer 1: starting transaction (stock before: 1)
+  step 1: stock reduced (inside the transaction)
+  step 2: order created (inside the transaction)
+  before COMMIT, visible to other users? NO
+  COMMITTED. Order 6accf1a0060d8c26d611fa4e now visible? YES
+  stock after: 0
+
+Customer 2: starting transaction (stock before: 0)
+  ABORTED (Out of stock). Every change in this transaction was undone.
+  stock after: 0
+
+==================================================================
+Result
+==================================================================
+Flash-sale orders stored: 1 | stock left: 0

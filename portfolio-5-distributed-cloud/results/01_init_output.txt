@@ -1,0 +1,39 @@
+﻿
+==================================================================
+Step 1  Initiate the replica set
+==================================================================
+{
+  _id: 'rs0',
+  members: [
+    {
+      _id: 0,
+      host: 'mongo1:27017',
+      priority: 2
+    },
+    {
+      _id: 1,
+      host: 'mongo2:27017',
+      priority: 1
+    },
+    {
+      _id: 2,
+      host: 'mongo3:27017',
+      priority: 1
+    }
+  ]
+}
+replSetInitiate -> ok: 1
+
+==================================================================
+Step 2  Wait for the election (up to 60 seconds)
+==================================================================
+Election finished: one PRIMARY and two SECONDARY members.
+
+==================================================================
+Step 3  Members
+==================================================================
+Replica set "rs0", as seen by this member:
+member          state       health  last write applied
+mongo1:27017    PRIMARY     1       2026-10-12 13:51:43   <- this member
+mongo2:27017    SECONDARY   1       2026-10-12 13:51:31
+mongo3:27017    SECONDARY   1       2026-10-12 13:51:31

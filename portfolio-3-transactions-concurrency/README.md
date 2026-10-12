@@ -85,7 +85,8 @@ numbers are therefore normal and not a sign of lost data.
 | File | Shows |
 |---|---|
 | `results/demo1_commit.txt` | Full output of Demo 1 |
-| `results/demo2_rollback_savepoint.txt` | Full output of Demo 2, including the expected errors |
+| `results/demo2_rollback_savepoint.txt` | Full output of Demo 2 (query results) |
+| `evidence/p3-demo2-expected-errors.png` | The three expected errors from Demo 2B and 2C |
 | `evidence/p3-demo3-lost-update.png` | Overselling: 2 orders for 1 phone |
 | `evidence/p3-demo4-for-update-waiting.png` | Window B blocked; `pg_stat_activity` showing the lock wait |
 | `evidence/p3-demo4-for-update-result.png` | One sale only |

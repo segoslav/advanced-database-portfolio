@@ -1,0 +1,79 @@
+﻿
+==================================================================
+Placing one order per second. Kill the primary at about order #10.
+==================================================================
+time      order  result   took (ms)  primary
+14:16:29  # 1    OK            265   mongo1:27017
+14:16:29  # 2    OK             47   mongo1:27017
+14:16:30  # 3    OK             22   mongo1:27017
+14:16:31  # 4    OK             16   mongo1:27017
+14:16:32  # 5    OK             23   mongo1:27017
+14:16:33  # 6    OK             18   mongo1:27017
+14:16:34  # 7    OK             18   mongo1:27017
+14:16:35  # 8    OK             24   mongo1:27017
+14:16:36  # 9    OK             17   mongo1:27017
+14:16:37  #10    OK             18   mongo1:27017
+14:16:38  #11    OK             20   mongo1:27017
+14:16:39  #12    OK             30   mongo1:27017
+14:16:40  #13    OK             23   mongo1:27017
+14:16:42  #14    OK             63   mongo1:27017
+14:16:42  #15    OK             19   mongo1:27017
+14:16:56  #16    OK          12690   mongo2:27017
+14:16:56  #17    OK             17   mongo2:27017
+14:16:57  #18    OK             28   mongo2:27017
+14:16:58  #19    OK             14   mongo2:27017
+14:16:59  #20    OK             14   mongo2:27017
+14:17:00  #21    OK             18   mongo2:27017
+14:17:01  #22    OK             12   mongo2:27017
+14:17:02  #23    OK             19   mongo2:27017
+14:17:03  #24    OK             26   mongo2:27017
+14:17:04  #25    OK             17   mongo2:27017
+14:17:05  #26    OK             33   mongo2:27017
+14:17:06  #27    OK             30   mongo2:27017
+14:17:07  #28    OK             35   mongo2:27017
+14:17:08  #29    OK             49   mongo2:27017
+14:17:09  #30    OK             27   mongo2:27017
+14:17:10  #31    OK             15   mongo2:27017
+14:17:11  #32    OK             14   mongo2:27017
+14:17:12  #33    OK             27   mongo2:27017
+14:17:13  #34    OK             22   mongo2:27017
+14:17:14  #35    OK             22   mongo2:27017
+14:17:15  #36    OK             34   mongo2:27017
+14:17:16  #37    OK             26   mongo2:27017
+14:17:17  #38    OK             18   mongo2:27017
+14:17:18  #39    OK             15   mongo2:27017
+14:17:19  #40    OK             14   mongo2:27017
+14:17:20  #41    OK             17   mongo2:27017
+14:17:21  #42    OK             16   mongo2:27017
+14:17:22  #43    OK             14   mongo2:27017
+14:17:23  #44    OK             17   mongo2:27017
+14:17:24  #45    OK             14   mongo2:27017
+
+==================================================================
+Result
+==================================================================
+Orders attempted: 45 | orders safely stored: 45 | lost: 0
+Primary now: mongo2:27017
+
+==================================================================
+Replica set status at 14:21:50
+==================================================================
+mongo1:27017 did not answer (Server selection timed out after 3000 ms), trying the next member...
+Replica set "rs0", as seen by this member:
+member          state       health  last write applied
+mongo1:27017    (not reachable/healthy) 0       1970-01-01 00:00:00
+mongo2:27017    PRIMARY     1       2026-10-12 14:21:46   <- this member
+mongo3:27017    SECONDARY   1       2026-10-12 14:21:46
+
+Current primary: mongo2:27017
+
+==================================================================
+Replica set status at 14:25:43
+==================================================================
+Replica set "rs0", as seen by this member:
+member          state       health  last write applied
+mongo1:27017    PRIMARY     1       2026-10-12 14:25:37   <- this member
+mongo2:27017    SECONDARY   1       2026-10-12 14:25:37
+mongo3:27017    SECONDARY   1       2026-10-12 14:25:37
+
+Current primary: mongo1:27017

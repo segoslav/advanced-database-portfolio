@@ -1,0 +1,38 @@
+﻿
+==================================================================
+Option A  shard key { "shipping_address.state": 1 }  (by delivery state)
+==================================================================
+Lagos           16173 orders  16.2%
+FCT              9723 orders  9.7%
+Anambra          5527 orders  5.5%
+Kwara            5514 orders  5.5%
+Adamawa          5252 orders  5.3%
+... 18 distinct states in total
+Busiest state (Lagos) has 2.9x the orders of an average state:
+whichever shard holds it becomes overloaded. And with only 18 possible key values,
+the data can never be split into more than 18 pieces, however much the shop grows.
+
+==================================================================
+Option B  shard key { order_date: 1 }  (by date, ranged)
+==================================================================
+2026-10    1651 orders
+2026-09    5400 orders
+2026-08    5490 orders
+Dates only ever increase, so EVERY new order lands on the shard holding "the latest dates".
+One shard takes all the writes (a "hot shard") while the others sit idle.
+
+==================================================================
+Option C  shard key { customer_id: "hashed" }  (recommended)
+==================================================================
+shard 1:  33224 orders (33.2%) from 1666 customers
+shard 2:  33644 orders (33.6%) from 1667 customers
+shard 3:  33135 orders (33.1%) from 1667 customers
+Even spread of data AND of new writes, and the most common query, "show MY orders",
+goes to exactly one shard because all of a customer's orders share a key.
+
+==================================================================
+Commands that would apply it on a sharded cluster (not run here)
+==================================================================
+  sh.enableSharding("shopnaija")
+  db.orders.createIndex({ customer_id: "hashed" })
+  sh.shardCollection("shopnaija.orders", { customer_id: "hashed" })

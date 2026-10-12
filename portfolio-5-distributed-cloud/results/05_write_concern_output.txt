@@ -1,0 +1,14 @@
+﻿
+==================================================================
+Insert 300 orders with each write concern and time them
+==================================================================
+write concern   total ms   avg ms per write
+w: 1                1133       3.78
+w: majority         4398      14.66
+w: 3                1439       4.80
+
+==================================================================
+Reading it back: readConcern
+==================================================================
+readConcern local: 300 documents | readConcern majority: 300 documents
+(Equal here because every write was already on a majority. They differ only while replication is catching up.)
