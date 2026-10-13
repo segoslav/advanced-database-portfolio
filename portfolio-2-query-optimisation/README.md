@@ -45,12 +45,12 @@ Execution times vary slightly between runs and computers; the **plan changes**
 | Q4 | Fulfilment queue | Seq Scan on orders | Bitmap Index Scan on partial index |21.800 | 2.368| Partial index `WHERE order_status IN (...)` |
 | Q5 | Case-insensitive email lookup | Seq Scan on customers | Index Scan |4.794 |0.053 | Expression index on `lower(email)` |
 | Q6 | Monthly revenue | Seq Scan on orders + order_items, Hash Join | Index on orders, but still Seq Scan on order_items |159.183 |103.252 | Index on `order_date` — **little gain** (see analysis) |
-| Q6b | Monthly revenue (via view) | — | Bitmap Index Scan on 2,785 summary rows | | 1.898| Materialised view `mv_daily_sales` |
+| Q6b | Monthly revenue (via view) | — | Bitmap Index Scan on 2,785 summary rows | — | 1.898| Materialised view `mv_daily_sales` |
 | Q7 | Search by attributes (JSONB) | Seq Scan on product_variants | Bitmap Index Scan (GIN) |1.860 | 1.599| GIN index `jsonb_path_ops` |
 | Q8 | Low-stock alert | Seq Scan on inventory | Seq Scan (unchanged) | 1.867| 1.800| **None — deliberately** |
 
-> Fill the two time columns with the `Execution Time` values from your own
-> `before_plans.txt` and `after_plans.txt`.
+Times are the `Execution Time` values from `results/before_plans.txt` and `results/after_plans.txt`
+(Q6b from `results/materialized_view.txt`).
 
 ## Analysis
 
