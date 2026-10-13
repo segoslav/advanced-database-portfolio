@@ -93,5 +93,4 @@ numbers are therefore normal and not a sign of lost data.
 | `evidence/p3-demo5-optimistic.png` | `UPDATE 0` in window B |
 | `evidence/p3-demo6-serializable.png` | Serialization error in window B |
 | `evidence/p3-demo7-read-committed.png` | Price changing inside one transaction |
-| `evidence/p3-demo7-repeatable-read.png` | Price stable inside one transaction |
 | `evidence/p3-demo8-deadlock.png` | Deadlock detected |
